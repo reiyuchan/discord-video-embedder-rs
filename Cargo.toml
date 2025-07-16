@@ -2,7 +2,7 @@
 name = "discord-video-embedder"
 version = "0.1.0"
 authors = ["reiyuchan <iwakura.rei.tk@gmail.com"]
-description = "A wrapper to help with discord video file embeds using https://discord.nfp.is/ for embed link generation and https://catbox.moe/ for file upload"
+description = "A wrapper to help with discord video file embeds in rust"
 license = "MIT OR Apache-2.0"
 publish = false
 edition = "2024"
