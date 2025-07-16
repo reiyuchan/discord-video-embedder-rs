@@ -1,0 +1,25 @@
+[package]
+name = "discord-video-embedder"
+version = "0.1.0"
+authors = ["reiyuchan <iwakura.rei.tk@gmail.com"]
+description = "A wrapper to help with discord video file embeds using https://discord.nfp.is/ for embed link generation and https://catbox.moe/ for file upload"
+license = "MIT OR Apache-2.0"
+publish = false
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+regex = "1.11.1"
+reqwest = { version = "0.12.22", features = ["multipart"] }
+tokio = { version = "1.46.1", features = ["full"] }
+
+[lib]
+name = "dve"
+path = "src/lib/lib.rs"
+
+[[bin]]
+name = "dve"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
