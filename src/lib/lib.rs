@@ -1,7 +1,8 @@
-use anyhow::{Ok, anyhow};
+use anyhow::{Ok, Result, anyhow};
 use reqwest;
 use std::{collections::HashSet, path};
 use tokio;
+use tokio_util::io::ReaderStream;
 
 const CATBOX_URL: &str = "https://catbox.moe/user/api.php";
 const BASE_URL: &str = "https://discord.nfp.is/";
@@ -22,51 +23,37 @@ impl DiscordEmbedder {
         }
     }
 
-    pub async fn upload(&self, path: &str) -> Result<String, anyhow::Error> {
-        let mut attempts = 0;
+    pub async fn upload(&self, path: &str) -> Result<String> {
+        let path = path::Path::new(path);
 
-        loop {
-            attempts += 1;
+        let allowed = is_allowed(path);
 
-            let file = tokio::fs::read(path).await?;
-            let path = path::Path::new(path);
-
-            let allowed = is_allowed(path);
-
-            if !allowed {
-                return Err(anyhow!("extension not allowed"));
-            }
-
-            let part = reqwest::multipart::Part::bytes(file)
-                .file_name(path.file_name().unwrap().to_str().unwrap().to_string());
-            let form = reqwest::multipart::Form::new()
-                .text("reqtype", "fileupload")
-                .part("fileToUpload", part);
-
-            let res = self
-                .client
-                .post(CATBOX_URL)
-                .multipart(form)
-                .send()
-                .await?
-                .text()
-                .await?;
-
-            if !res.is_empty() {
-                break Ok(res);
-            }
-
-            if attempts >= 3 {
-                break Err(anyhow!("upload aborted due to repeated request failure"));
-            }
-
-            println!("upload aborted due to request failure retrying...");
-
-            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        if !allowed {
+            return Err(anyhow!("extension not allowed"));
         }
+
+        let file =
+            reqwest::Body::wrap_stream(ReaderStream::new(tokio::fs::File::open(path).await?));
+
+        let part = reqwest::multipart::Part::stream(file)
+            .file_name(path.file_name().unwrap().to_str().unwrap().to_string());
+        let form = reqwest::multipart::Form::new()
+            .text("reqtype", "fileupload")
+            .part("fileToUpload", part);
+
+        let res = self
+            .client
+            .post(CATBOX_URL)
+            .multipart(form)
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        Ok(res)
     }
 
-    pub async fn get_embed(&self, url: &str) -> Result<String, anyhow::Error> {
+    pub async fn get_embed(&self, url: &str) -> Result<String> {
         let path = path::Path::new(url);
 
         let allowed = is_allowed(path);

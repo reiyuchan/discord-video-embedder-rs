@@ -10,8 +10,9 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.98"
 regex = "1.11.1"
-reqwest = { version = "0.12.22", features = ["multipart"] }
+reqwest = { version = "0.12.22", features = ["multipart", "stream"] }
 tokio = { version = "1.46.1", features = ["full"] }
+tokio-util = "0.7.15"
 
 [lib]
 name = "dve"
